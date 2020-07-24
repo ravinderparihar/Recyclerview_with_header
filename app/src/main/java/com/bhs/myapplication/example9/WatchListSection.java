@@ -1,0 +1,96 @@
+package com.bhs.myapplication.example9;
+
+import android.view.View;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+
+import com.bhs.myapplication.library.Section;
+import com.bhs.myapplication.library.SectionParameters;
+import com.bhs.myapplication.R;
+import com.bhs.myapplication.library.utils.EmptyViewHolder;
+
+class WatchListSection extends Section {
+
+    private final List<WatchItem> list;
+    private final ClickListener clickListener;
+
+    WatchListSection(@NonNull List<WatchItem> list, ClickListener clickListener) {
+        super(SectionParameters.builder()
+                .itemResourceId(R.layout.section_ex9_watchlist_item)
+                .headerResourceId(R.layout.section_ex9_watchlist_header)
+                .build());
+
+        setHasHeader(true);
+
+        this.list = list;
+        this.clickListener = clickListener;
+    }
+
+    @Override
+    public int getContentItemsTotal() {
+        return list.size();
+    }
+
+    @Override
+    public RecyclerView.ViewHolder getItemViewHolder(View view) {
+        return new WatchItemViewHolder(view);
+    }
+
+    @Override
+    public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
+        final WatchItemViewHolder itemHolder = (WatchItemViewHolder) holder;
+
+        WatchItem item = list.get(position);
+
+        itemHolder.tvCode.setText(item.code);
+        itemHolder.tvPrice.setText(String.valueOf(item.price));
+        itemHolder.tvDelta.setText(String.valueOf(item.delta));
+        itemHolder.tvDelta.setTextColor(item.deltaColor);
+    }
+
+    @Override
+    public void onBindItemViewHolder(final RecyclerView.ViewHolder holder, final int position,
+                                     final List<Object> payloads) {
+        final WatchItemViewHolder itemHolder = (WatchItemViewHolder) holder;
+
+        WatchItem item = list.get(position);
+
+        for (Object obj : payloads) {
+            if (obj instanceof ItemPriceUpdate) {
+                itemHolder.tvPrice.setText(String.valueOf(item.price));
+                itemHolder.tvDelta.setText(String.valueOf(item.delta));
+                itemHolder.tvDelta.setTextColor(item.deltaColor);
+            }
+        }
+
+        itemHolder.rootView.setOnClickListener(v ->
+                clickListener.onItemRootViewClicked(this, itemHolder.getAdapterPosition())
+        );
+    }
+
+    @Override
+    public RecyclerView.ViewHolder getHeaderViewHolder(View view) {
+        return new EmptyViewHolder(view);
+    }
+
+    void updateItemPrice(final int index, final String price, final String delta,
+                         final @ColorInt int deltaColor) {
+        WatchItem watchItem = list.get(index);
+
+        watchItem.price = price;
+        watchItem.delta = delta;
+        watchItem.deltaColor = deltaColor;
+    }
+
+    static class ItemPriceUpdate {
+    }
+
+    interface ClickListener {
+
+        void onItemRootViewClicked(@NonNull final WatchListSection section, final int itemAdapterPosition);
+    }
+}
